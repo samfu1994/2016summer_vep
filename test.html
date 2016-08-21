@@ -1,0 +1,84 @@
+<!--developed from the beginning-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>test</title>
+    <script src="d3.min.js"></script>
+    <script src="box.js"></script>
+    
+</head>
+
+<body>
+    <div id="charts">
+    </div>
+</body>
+    <script>
+        var margin = {top: 10, right: 50, bottom: 20, left: 50},
+            width = 120 - margin.left - margin.right,
+            height = 500 - margin.top - margin.bottom;
+        
+        
+        
+            d3.csv("fake.csv", function(data){
+                var chart = d3.box()
+                            .whiskers(iqr(1.5))
+                            .width(width)
+                            .height(height);
+                
+                var c = [];
+                var min = [], max = [];
+                for(i = 0; i < 3; i++){
+                    c[i] = []
+                    min[i] = Infinity, max[i] = -Infinity;
+                }
+                var count = 0;
+                data.forEach(function(d){
+                    c[0].push(d.col0);
+                    c[1].push(d.col1);
+                    c[2].push(d.col2);
+                    for(i = 0; i < 3; i++){
+                        if(c[i][count] < min[i])
+                            min[i] = c[i][count];
+                        else if(c[i][count] > max[i])
+                            max[i] = c[i][count];
+                    }
+                    count++;
+                    
+                });
+                console.log(c[0]);
+                console.log(c[0] + 3);
+                
+                
+
+                var chart = d3.select("#charts").selectAll("svg")
+                .data(c)
+                .enter().append("svg")
+                .attr("class", "box")
+                .attr("width", 800)
+                .attr("height", 400)
+                .call(chart);
+                
+            
+            });
+
+            function iqr(k) {
+              return function(d, i) {
+                var q1 = d.quartiles[0],
+                    q3 = d.quartiles[2],
+                    iqr = (q3 - q1) * k,
+                    i = -1,
+                    j = d.length;
+                while (d[++i] < q1 - iqr);
+                while (d[--j] > q3 + iqr);
+                return [i, j];
+              };
+            }
+            
+            
+
+
+            
+            
+    </script>
+</html>
