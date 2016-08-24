@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<header>
+<meta charset="utf-8">
+    <script src="//d3js.org/d3.v3.min.js"></script>
+    <script src="box.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+
+<style>
+
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.box {
+  font: 10px sans-serif;
+}
+
+.box line,
+.box rect,
+.box circle {
+  fill: #fff;
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+
+.box .center {
+  stroke-dasharray: 3,3;
+}
+
+.box .outlier {
+  fill: none;
+  stroke: #ccc;
+}
+
+</style>
+</header>
+    <body>
+    
+   
+    <button class="sortCriterion" value="mean">MEAN</button>
+    <button class="sortCriterion" value="min">MIN</button>
+    <button class="sortCriterion" value="max">MAX</button>
+    <div id="chart">
+        
+    </div>
+    
+    <script src="main.js"></script>
+    </body>
+</html>

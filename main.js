@@ -30,7 +30,7 @@ var findMean = function(arr){
 }
 var refer = [];
 
-d3.csv("ubiq1.csv", function(error, csv) {
+d3.csv("ubiq3.csv", function(error, csv) {
   if (error) throw error;
 
   Object.size = function(obj) {
