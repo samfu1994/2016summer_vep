@@ -1,6 +1,5 @@
 (function() {
 
-// Inspired by http://informationandvisualization.de/blog/box-plot
 d3.box = function() {
   var width = 1,
       height = 1,
@@ -14,6 +13,7 @@ d3.box = function() {
   // For each small multiple…
   function box(g) {
     g.each(function(d, i) {
+      console.log("#" + i);
       d = d.map(value).sort(d3.ascending);
       var g = d3.select(this),
           n = d.length,
@@ -22,19 +22,22 @@ d3.box = function() {
 
       // Compute quartiles. Must return exactly 3 elements.
       var quartileData = d.quartiles = quartiles(d);
-
+//      console.log(quartileData);
       // Compute whiskers. Must return exactly 2 elements, or null.
+        
       var whiskerIndices = whiskers && whiskers.call(this, d, i),
           whiskerData = whiskerIndices && whiskerIndices.map(function(i) { return d[i]; });
 
+      console.log(whiskerIndices);
+      console.log(whiskerIndices.map(function(i) { return d[i]; }));
       // Compute outliers. If no whiskers are specified, all data are "outliers".
       // We compute the outliers as indices, so that we can join across transitions!
-      var outlierIndices = whiskerIndices
-          ? d3.range(0, whiskerIndices[0]).concat(d3.range(whiskerIndices[1] + 100, n))
+      var outlierIndices = 
+          whiskerIndices? 
+          d3.range(0, whiskerIndices[0]).concat(d3.range(whiskerIndices[1] + 1, n))
           : d3.range(n);
-//      console.log("outlierIndices");
-//      console.log(whiskerIndices[0]);
-//      console.log(whiskerIndices[1]);
+      console.log(d);
+//      console.log(outlierIndices);
       // Compute the new x-scale.
       var x1 = d3.scale.linear()
           .domain(domain && domain.call(this, d, i) || [min, max])
