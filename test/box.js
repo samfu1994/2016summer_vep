@@ -13,7 +13,7 @@ d3.box = function() {
   // For each small multiple…
   function box(g) {
     g.each(function(d, i) {
-      console.log("#" + i);
+//      console.log("#" + i);
       d = d.map(value).sort(d3.ascending);
       var g = d3.select(this),
           n = d.length,
@@ -28,15 +28,15 @@ d3.box = function() {
       var whiskerIndices = whiskers && whiskers.call(this, d, i),
           whiskerData = whiskerIndices && whiskerIndices.map(function(i) { return d[i]; });
 
-      console.log(whiskerIndices);
-      console.log(whiskerIndices.map(function(i) { return d[i]; }));
+//      console.log(whiskerIndices);
+//      console.log(whiskerIndices.map(function(i) { return d[i]; }));
       // Compute outliers. If no whiskers are specified, all data are "outliers".
       // We compute the outliers as indices, so that we can join across transitions!
       var outlierIndices = 
           whiskerIndices? 
           d3.range(0, whiskerIndices[0]).concat(d3.range(whiskerIndices[1] + 1, n))
           : d3.range(n);
-      console.log(d);
+//      console.log(d);
 //      console.log(outlierIndices);
       // Compute the new x-scale.
       var x1 = d3.scale.linear()
@@ -92,6 +92,7 @@ d3.box = function() {
 
       box.enter().append("rect")
           .attr("class", "box")
+          .attr("pointer-events", "none")
           .attr("x", 0)
           .attr("y", function(d) { return x0(d[2]); })
           .attr("width", width)
