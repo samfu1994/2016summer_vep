@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="demo" ng-init="mySwitch=false" >
+<head>
+<meta charset="utf-8">
+    <script src="//d3js.org/d3.v3.min.js"></script>
+    <script src="box.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.min.js"></script>
+    
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    
+    <script src="main.js"></script>
+
+<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+    <script></script>
+    <body ng-controller="ctrl">
+    
+    
+    <div class="dropdown" >
+      
+      <button ng-click="selectCri()" class="dropbtn">Select</button>
+      <div id='cri_bar' >
+          <span style="">Current criterion: </span>
+          <span style="color: cornflowerblue" ng-bind="current_criterion"></span>
+      </div>
+      <div id="myDropdown" class="dropdown-content">
+        <a ng-click='confirmCri(ele)' ng-repeat='ele in type'>{{ele}}</a>
+      </div>
+    </div>
+   
+    <p>
+    <input type="checkbox" ng-model="mySwitch">Show
+    <input type="checkbox" ng-model="rev">In Reverse Order
+<!--
+    <input type="text" ng-model="mySwitch">
+    <input type="text" ng-model="rev">
+-->
+    </p>
+    <div class = "mid"  ng-show="mySwitch">
+       <div></div>
+        <table style="width:50%">
+        
+         <tr>
+         <th>COL_NAME</th>
+         <th>MAX</th>
+         <th>MEAN</th>
+         <th>MIN</th>
+         </tr>
+<!--         <input type="text" ng-model="criterion">-->
+         <tr ng-repeat="c in cri | orderBy : current_criterion : isRev ">
+             <td>{{c.name}}</td>
+             <td>{{c.max}}</td>
+             <td>{{c.mean}}</td>
+             <td>{{c.min}}</td>
+         </tr>
+         
+        </table>
+      <hr>
+          <script>
+        console.log(data);
+    </script>
+    </div>
+
+
+    </body>
+</html>
