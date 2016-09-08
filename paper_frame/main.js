@@ -17,6 +17,17 @@ app.controller('ctrl', function($scope){
         $scope.$watch('rev', function() {
             $scope.isRev = !$scope.isRev;
         });
+        
+        
+        $scope.showChart = function(item){
+            myName = item.name;
+            var results = $.map(data, function(e,i){
+              if( e.name === myName ){ 
+                  console.log(e);
+                  draw_histo(e.data);
+              }
+            });
+        }
 
         function getCri(){
                 d3.csv("data/criterion.csv", function(error, csv){
@@ -32,7 +43,6 @@ app.controller('ctrl', function($scope){
                         data = csv;
                         $scope.data = data;
                         console.log(data);
-
                     });
                   }
         )};

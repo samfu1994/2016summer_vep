@@ -39,12 +39,11 @@ body {
 }
     
 .dropbtn :hover{
-    
 }
 
 .dropdown{
     position: relative;
-    
+    width: 100px;
 }
 
 
@@ -74,6 +73,40 @@ body {
     position: absolute; 
     display: inline-block; 
     height:45px;
+    width: 200px;
     padding-top:15px;
 }
+.status_bar{
+    width: 200px;
+}
+
+.item {
+    
+}
+
 .show {display:block;}
+
+.mid {
+    display: inline-block;
+}
+
+.container_left {
+    width: 60%;
+    display: inline-block;
+    position: relative;
+}
+
+.container_right{
+    height: 100%;
+    display: inline-block;
+    white-space: nowrap;
+    position: relative;
+}
+
+td{
+    width: 50%;
+}
+.svg{
+    padding-top: 0px;
+    top: 0px;
+}

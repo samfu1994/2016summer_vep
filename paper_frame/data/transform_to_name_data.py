@@ -28,6 +28,8 @@ with open('ubiq2.csv', 'rb') as csvfile:
 			arr[i][1].append(ele)
 			i += 1
 
+	for row in arr:
+		row[1] = ','.join(row[1])
 	arr[0][1] = 'data';
 	arr[0][0] = 'name';
 			
