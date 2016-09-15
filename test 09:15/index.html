@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<header>
+<meta charset="utf-8">
+<!--   <script src="//d3js.org/d3.v4.0.0-alpha.45.min.js"></script>-->
+    <script src="//d3js.org/d3.v4.min.js"></script>
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.3/d3.min.js"></script>-->
+    <script src="box.js"></script>
+    <script src="histogram-chart.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+
+
+<link rel="stylesheet" type="text/css" href="css/style.css">
+<style>
+
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.box {
+  font: 10px sans-serif;
+}
+
+.box line,
+.box rect,
+.box circle {
+  fill: #fff;
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+
+.box .center {
+  stroke-dasharray: 3,3;
+}
+
+.box .outlier {
+  fill: none;
+  stroke: #ccc;
+}
+
+.btn {
+  stroke:#fff;
+  fill:#fff;
+  fill-opacity:0;
+  stroke-opacity:0;
+}
+    
+#chart {
+    display:block;
+    white-space: nowrap;
+}
+</style>
+</header>
+    <body>
+    
+   
+    <button class="sortCriterion" value="mean">MEAN</button>
+    <button class="sortCriterion" value="min">MIN</button>
+    <button class="sortCriterion" value="max">MAX</button>
+    <button class="sortCriterion" value="desc">DESC</button>
+    <button id="clear_histo">CLEAR HISTOGRAM</button>
+    &nbsp;&nbsp;&nbsp;&nbsp;
+    <input type="text" id="myInput">
+    <button id="getInput">Search</button>
+    <button id="cancel">Cancel</button>
+    <br>
+    <div id="chart">
+        
+    </div>
+    <div id="histo_chart"></div>
+    
+    <script src="main.js"></script>
+    <script>
+        getdata(0);
+    </script>
+    </body>
+</html>
