@@ -79,7 +79,7 @@ function getdata(flag){
       for(var row in csv){
           index = 0;
           for(var ele in csv[row]){
-              var tmp = csv[row][ele];
+              var tmp = +csv[row][ele];
               if(!isNaN(tmp)){
                   refer[index].push(tmp);
                   if (tmp > max[index]) max[index] = tmp;
@@ -326,6 +326,11 @@ function highlight(num){
             svg_height * (tmp - refer[i].minValue) / (refer[i].maxValue - refer[i].minValue);
         else
             cur_coordinate = 470;
+        if(cur_coordinate > 470){
+            console.log("aaaa");
+            console.log(cur_coordinate);
+            console.log([tmp, refer[i].minValue, refer[i].maxValue]);
+        }
         coordinate.push(cur_coordinate);
         x_coorninate.push(10);
     }
