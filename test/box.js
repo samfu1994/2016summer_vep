@@ -13,38 +13,57 @@ d3.box = function() {
   // For each small multiple…
   function box(g) {
     g.each(function(d, i) {
-//      console.log("#" + i);
-      d = d.map(value).sort(d3.ascending);
+
+     //g for all of the svg
+     // d for each of the svg/column
+      d = d.map(function(val, i){
+           var rObj = {};
+           rObj["value"] = +val;
+           rObj["index"] = i;
+          // for each of the element, make the value connect to index
+          //index is int, value is string!!!!
+           return rObj;
+      }).sort(function(a, b){
+          if (a.value > b.value) {
+            return 1;
+          }
+          if (a.value < b.value) {
+            return -1;
+          }
+          
+          return 0; 
+      }); 
+        //define a new g, which is the current 
       var g = d3.select(this),
           n = d.length,
-          min = d[0],
-          max = d[n - 1];
+          min = d[0].value,
+          max = d[n - 1].value;
 
-      // Compute quartiles. Must return exactly 3 elements.
+      // Compute quartiles. Must return exactly 3 elements, q1, mean, q3
       var quartileData = d.quartiles = quartiles(d);
-//      console.log(quartileData);
-      // Compute whiskers. Must return exactly 2 elements, or null.
         
-      var whiskerIndices = whiskers && whiskers.call(this, d, i),
-          whiskerData = whiskerIndices && whiskerIndices.map(function(i) { return d[i]; });
-
-//      console.log(whiskerIndices);
-//      console.log(whiskerIndices.map(function(i) { return d[i]; }));
+      // Compute whiskers. Must return exactly 2 elements, or null.
+        var dd = d.map(function(ddd){
+          return ddd.value;
+        });
+        dd.quartiles = d.quartiles;
+        var whiskerIndices = whiskers && whiskers.call(this, dd, i);
+        var whiskerData = whiskerIndices && whiskerIndices.map(function(i) { return dd[i]; });
+        
       // Compute outliers. If no whiskers are specified, all data are "outliers".
       // We compute the outliers as indices, so that we can join across transitions!
       var outlierIndices = 
           whiskerIndices? 
           d3.range(0, whiskerIndices[0]).concat(d3.range(whiskerIndices[1] + 1, n))
           : d3.range(n);
-//      console.log(d);
-//      console.log(outlierIndices);
-      // Compute the new x-scale.
-      var x1 = d3.scale.linear()
-          .domain(domain && domain.call(this, d, i) || [min, max])
-          .range([height, 0]);
 
+      // Compute the new x-scale.
+      var x1 = d3.scaleLinear()
+          .domain(domain && domain.call(this, dd, i) || [min, max])
+          .range([height, padding_top_offset]);
+        
       // Retrieve the old x-scale, if this is an update.
-      var x0 = this.__chart__ || d3.scale.linear()
+      var x0 = this.__chart__ || d3.scaleLinear()
           .domain([0, Infinity])
           .range(x1.range());
 
@@ -59,7 +78,7 @@ d3.box = function() {
       // Update center line: the vertical line spanning the whiskers.
       var center = g.selectAll("line.center")
           .data(whiskerData ? [whiskerData] : []);
-
+        
       center.enter().insert("line", "rect")
           .attr("class", "center")
           .attr("x1", width / 2)
@@ -89,7 +108,9 @@ d3.box = function() {
       // Update innerquartile box.
       var box = g.selectAll("rect.box")
           .data([quartileData]);
-
+        
+      
+      
       box.enter().append("rect")
           .attr("class", "box")
           .attr("pointer-events", "none")
@@ -98,14 +119,17 @@ d3.box = function() {
           .attr("width", width)
           .attr("height", function(d) { return x0(d[0]) - x0(d[2]); })
         .transition()
+          .style("z-index", "-1")
           .duration(duration)
           .attr("y", function(d) { return x1(d[2]); })
-          .attr("height", function(d) { return x1(d[0]) - x1(d[2]); });
-
-      box.transition()
-          .duration(duration)
-          .attr("y", function(d) { return x1(d[2]); })
-          .attr("height", function(d) { return x1(d[0]) - x1(d[2]); });
+          .attr("height", function(d) { if(x1(d[0]) - x1(d[2]) < 0){
+//          console.log(d); console.log(x1(d[0]));console.log(x1(d[2]));console.log(x1(d[0]) - x1(d[2]));
+      }     return x1(d[0]) - x1(d[2]); });
+//
+//      box.transition()
+//          .duration(duration)
+//          .attr("y", function(d) { return x1(d[2]); })
+//          .attr("height", function(d) { return x1(d[0]) - x1(d[2]); });
 
       // Update median line.
       var medianLine = g.selectAll("line.median")
@@ -160,28 +184,83 @@ d3.box = function() {
       // Update outliers.
       var outlier = g.selectAll("circle.outlier")
           .data(outlierIndices, Number);
+      
+        
+//          console.log(outlierIndices);
 
+//      console.log(tooltip[0][i]);
+        
       outlier.enter().insert("circle", "text")
           .attr("class", "outlier")
-          .attr("r", 5)
+          .attr("r", 4)
           .attr("cx", width / 2)
-          .attr("cy", function(i) { return x0(d[i]); })
+          .attr("cy", function(i) { return x0(dd[i]); })
           .style("opacity", 1e-6)
-        .transition()
+          .style("fill", "black")
+          .attr('index', function(i){ return d[i].index;})
+          .transition()
           .duration(duration)
-          .attr("cy", function(i) { return x1(d[i]); })
+          .attr("cy", function(i) { return x1(dd[i]); })
           .style("opacity", 1);
+//        var ssvg = g.selectAll("circle.highlight");
+     
+          g.append("circle")
+            .attr("class", "highlight")
+            .attr("cx", 10)
+            .attr("cy", 470)
+            .attr("stroke-width", 10)
+            .attr("r", 5)
+            .style("position", "absolute")
+            .style("visibility", "hidden")
+            .style("z-index", 20);   
+        
+        var tt = g.selectAll(".outlier")
+            .on("mouseover", function(){
 
-      outlier.transition()
-          .duration(duration)
-          .attr("cy", function(i) { return x1(d[i]); })
-          .style("opacity", 1);
+                //now d is after sorting.
+                d = +d3.select(this).attr("index");
+                float_window["_groups"][0][0].textContent = document_name[d];
+                float_window["_groups"][0][0].style.visibility = "visible";
+                highlight(d);
+            })
+            .on("mousemove", function(){
+//                console.log(Event.pageY);
+//                console.log(Event.pageX);
+                float_window["_groups"][0][0].style["top"] = (event.pageY-10)+"px";
+                float_window["_groups"][0][0].style["left"] = (event.pageX+10)+"px";
+            })
+        
+            .on("mouseout", function(){
+                    float_window["_groups"][0][0]["style"].visibility = "hidden";
+                    hide_highlight();
+           });
+          
+      
+//        var tmp = g.selectAll(".outlier")
+//                .append("div")
+//                .attr("x", 0)
+//                .attr("dy", ".35em")
+//                .attr("text-anchor", "middle")
+//                .style("position", "absolute")
+//                .style("z-index", "10")
+//                .style("visibility", "visible")
+//                .text(function(d) { return document_name[d]; });
+        
+        
+        
+              
 
-      outlier.exit().transition()
-          .duration(duration)
-          .attr("cy", function(i) { return x1(d[i]); })
-          .style("opacity", 1e-6)
-          .remove();
+//      outlier.transition()
+//          .duration(duration)
+//          .attr("cy", function(i) { return x1(d[i]); })
+//          .style("opacity", 1);
+//
+//      outlier.exit().transition()
+//          .duration(duration)
+//          .attr("cy", function(i) { return x1(d[i]); })
+//          .style("opacity", 1e-6)
+//          .remove();
+
 
       // Compute the tick format.
       var format = tickFormat || x1.tickFormat(8);
@@ -238,7 +317,8 @@ d3.box = function() {
           .style("opacity", 1e-6)
           .remove();
     });
-    d3.timer.flush();
+//    d3.timer.flush();
+            
   }
 
   box.width = function(x) {
@@ -297,10 +377,13 @@ function boxWhiskers(d) {
 }
 
 function boxQuartiles(d) {
+  var func = function(d){
+      return d.value;
+  };
   return [
-    d3.quantile(d, .25),
-    d3.quantile(d, .5),
-    d3.quantile(d, .75)
+    d3.quantile(d.map(func), .25),
+    d3.quantile(d.map(func), .5),
+    d3.quantile(d.map(func), .75)
   ];
 }
 

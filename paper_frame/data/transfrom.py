@@ -1,27 +1,13 @@
 import csv
 
-with open('ubiq2.csv', 'rb') as csvfile:
+SIZE = 10000;
+with open("ubiq3.csv", 'rb') as csvfile:
 	reader = csv.reader(csvfile, delimiter=',', quotechar='|')
-	attrs = 0
-	docus = 0
-	for row in reader:
-		attrs = len(row)
-		break
-	docus = sum([1 for row in reader])
-
-	csvfile.seek(0)
-
-	arr = [[] for i in range(attrs)]
-
-
-	for row in reader:
-		i = 0
-		for ele in row:
-			arr[i].append(ele)
-			i += 1
-	arr[0][1] = 'data';
-	arr[0][0] = 'name';
-			
-	with open("output.csv", "wb") as f:
-	    writer = csv.writer(f)
-	    writer.writerows(arr)
+	count = 0
+	with open("test_ubiq.csv", 'wb') as testcsv:
+		writer = csv.writer(testcsv)
+		for row in reader:
+			writer.writerows(row)
+			count += 1
+			if count == SIZE:
+				break;
