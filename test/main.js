@@ -533,7 +533,25 @@ function highlight(num){
     .style("pointer-events", "none")
     .style("z-index", "15")
     .attr("cy", function(d){ return d;});
-
+    
+    d3.select("#reference")
+    .select("svg")
+    .append("circle")
+    .attr("class", "highlight" + current_click)
+    .attr("r", 5)
+    .attr("cx", 20)
+    .attr("cy", function(){return 20 +  10 * current_click})
+    .attr("stroke-width", 10)
+    .style("fill", color_pool[current_click + 1]);
+    
+    d3.select("#reference")
+    .select("svg")
+    .append("text")
+    .attr("class", "highlight" + current_click)
+    .attr("dy", function(){return 20 + 10 * current_click;})
+    .attr("dx",  20)
+    .attr("position", "relative")
+    .text(document_name[num]);
 };
 
 $(".file").click(function(){

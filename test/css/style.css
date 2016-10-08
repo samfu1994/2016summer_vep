@@ -7,3 +7,7 @@
     background-color: #eee;
     z-index: 10;
 }
+
+#reference {
+    position:fixed;
+}
