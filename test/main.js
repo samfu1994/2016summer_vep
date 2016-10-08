@@ -5,13 +5,23 @@ var margin = {top: 10, right: 50, bottom: 20, left: 50},
 var padding_top_offset = 10;
 var min = [],
     max = [];
-
 var document_name = [];
 var name2index = new Object;
 var float_window;
 var HORIZIN_HISTO_HEIGHT = 500;
 var HORIZIN_HISTO_WIDTH = 120;
 var tooltip;
+var clicked = false;
+var current_click = -1;
+var click_count = 0;
+var files = ["data/transpose_ubiq2.csv", "data/20000_ubiq3.csv"]
+var color_pool = ["red", "aqua", "blue", "blueviolet", "burlywood", "cadetblue",
+                 "chartreuse", "darkblue", "darkorange", "darkgrey", "brown"];
+var visited_color = new Array(color_pool.length)
+for(i = 0; i < color_pool.length; i++)
+    visited_color[i] = 0;
+
+var visited = new Array(500);
 //var svg;
 
 var sortMean = function(a, b){
@@ -35,8 +45,9 @@ var refer = new Array; //global var to store the input 2d mat
 var clickMargin = 10;
 
 
-function getdata(flag){
-    d3.csv("data/test_ubiq.csv", function(error, csv) {
+function getdata(file_index){
+    
+    d3.csv(files[file_index], function(error, csv) {
       if (error) throw error;
 
       Object.size = function(obj) {
@@ -89,9 +100,8 @@ function getdata(flag){
           refer[col].label = label[col]; 
       }
 //        alert(refer[0].length);
-      if(!flag) draw();
-      else histo(flag);
-        
+      draw();
+
       float_window = d3.select("body").append("div");
         float_window.style("position", "absolute")
             .style("z-index", "10")
@@ -102,6 +112,9 @@ function getdata(flag){
 )};
 function draw(){
     //define chart, will be called later
+    for(i = 0; i < 500; i++){
+        visited[i] = 0;
+    }
     var chart = d3.box()
     .whiskers(iqr(3))
     .width(width)
@@ -116,7 +129,8 @@ function draw(){
           .attr("class", "single_container")
           .style("display","inline-block")
           .style("width", "120px")
-          .style("height", "700px");
+          .style("height", "700px")
+          .style("position", "relative");
     
     //each svg has a histogram plot and a boxplot
     
@@ -129,9 +143,16 @@ function draw(){
             .attr("width", function(d, i){
                     return width + margin.left + margin.right; 
               })
-            .attr("height", height + margin.bottom + margin.top)
-            .attr("position", "relative");
-    //this is the boxplot
+            .attr("height", height + margin.bottom + margin.top); //this is the boxplot
+    var histo_svg = containers
+            .append("svg")
+            .attr("class","color-svg")
+            .style("display", "none")
+            .attr("id", function(d, i){return "color-svg" + i;})
+            .attr("width", function(d, i){
+                    return width + margin.left + margin.right; 
+              })
+            .attr("height", height + margin.bottom + margin.top); //this is the boxplot
     var svg = containers
           .append("svg")
           .attr("class", "box box-svg")
@@ -140,33 +161,63 @@ function draw(){
           .attr("width", function(d, i){
                 return width + margin.left + margin.right; 
           })
-          .attr("height", height + margin.bottom + margin.top)
-          .attr("position", "relative");
-    
+          .attr("height", height + margin.bottom + margin.top);    
     //show to histogram in place
-    var change2histo_buttons = containers
+      var colorButtons = containers
             .append("button")
             .attr("type", "button")
-            .attr("class","btn btn-primary")
-            .text("histogram")
+            .attr("class","btn btn-info")
+            .text("color plot")
             .style("width", "100px")
             .style("display", "block")
             .style("margin-top", "5px")
             .style("margin-bottom", "5px")
             .on("click", function(d, i){
-                draw_horizon_histo(i);
+                var cur = d3.select("#color-svg" + i);
+                console.log(cur.style);
+                if(d3.select("#color-svg" + i).style("display") == "none"){
+                    d3.select("#histo-svg" + i).style("display", "none").style("position", "relative");
+                    d3.select("#box-svg" + i).style("display", "none").style("position", "relative");
+                    draw_color_coding(i);
+                }
+                else{
+                    d3.select("#color-svg" + i).style("display", "none").style("position", "relative");
+                    d3.select("#box-svg" + i).style("display", "block").style("position", "relative");
+                }
+                
             });
-    //show the boxplot
-    var change2box_buttons = containers
+                
+                
+        var changeButtons = containers
             .append("button")
             .attr("type", "button")
             .attr("class","btn btn-primary")
-            .text("boxplot")
+            .text("change plot")
+            .style("width", "100px")
             .style("display", "block")
             .style("margin-top", "5px")
             .style("margin-bottom", "5px")
             .on("click", function(d, i){
-                recover_box(i);
+                if( d3.select("#histo-svg" + i).style("display") == "none"){
+                    //to show histogram
+                    
+                    if(visited[i]){
+                        d3.select("#histo-svg" + i).style("display", "block").style("position", "relative");
+                    
+                        d3.select("#box-svg" + i).style("display", "none").style("position", "relative");
+                        
+                        d3.select("#histo-svg"+i).select(".eachLabel").style("display","block");
+                    }
+                    else{
+                        draw_horizon_histo(i);
+                        visited[i] = 1;
+                    }
+                }
+                else{
+                    d3.select("#histo-svg" + i).style("display", "none").style("position", "relative");
+                    d3.select("#box-svg" + i).style("display", "block").style("position", "relative");
+                    
+                }
             });
     //show both the boxplot and histogram plot
     var show_both_buttons = containers
@@ -195,6 +246,8 @@ function draw(){
 //            return 0;
             return -(width + margin.left + margin.right)
           })
+          .attr("class","eachLabel")
+
           .attr("font-family", "sans-serif")
           .attr("font-size", "10px")
           .attr("fill", "red"); 
@@ -217,73 +270,60 @@ function draw(){
       svg.call(chart);
     };
 
-function draw_histo(number){
-    d3.select("#histo_chart").selectAll("svg")
-    .data([])
-    .exit()
-    .remove();
-    
+
+function recover_box(number){
+    d3.select("#histo-svg"+number).style("display", "none");
+    d3.select("#box-svg"+number).style("display", "inline-block");
+}
+
+function draw_color_coding(number){
     data = refer[number];
     var minValue = Math.min.apply(null, data);
     var maxValue = Math.max.apply(null, data);
-//    var data = d3.range(1000).map(d3.randomBates(10));
 
     var formatCount = d3.format(",.0f");
 
-    var margin = {top: 10, right: 30, bottom: 30, left: 30},
-        width = 960 - margin.left - margin.right,
-        height = 500 - margin.top - margin.bottom;
-
-    var x = d3.scaleLinear()
-        .domain([minValue, maxValue])
-        .rangeRound([0, width]);
-    
-    var bins = d3.histogram()
-        .domain(x.domain())
-        .thresholds(x.ticks(20))
-        (data);
-    console.log("bins");
-    console.log(bins);
+    var margin = {top: 10, right: 30, bottom: 30, left: 30};
+    var width = HORIZIN_HISTO_WIDTH - margin.left - margin.right;
+    var height = HORIZIN_HISTO_HEIGHT - margin.top - margin.bottom;
 
     var y = d3.scaleLinear()
-        .domain([0, d3.max(bins, function(d) { return d.length; })])
-        .range([height, 0]);
+        .domain([minValue, maxValue])
+        .range([470, 0]);
+    
+    var bins = d3.histogram()
+        .domain(y.domain())
+        .thresholds(y.ticks(35))
+        (data);
 
-    var svg = d3.select("#histo_chart").append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-      .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    var x = d3.scaleLinear()
+        .domain([0, d3.max(bins, function(d) { 
+            return d.length; })])
+        .range([0, width]);
+
+    var svg = d3.select("#color-svg"+number)
+        .style("display", "inline-block")
+    ;
+    var num_bar = bins.length
+    var each_height = 470.0 / num_bar
 
     var bar = svg.selectAll(".bar")
         .data(bins)
         .enter().append("g")
         .attr("class", "bar")
-        .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; })
-    ;
+        .attr("transform", function(d, i) { 
+            if(y(d.x1) == 470)
+                return "translate(" + 0 + ", 500 )";
+
+            return "translate(" + 0 + "," + y(d.x1) + ")"; });
 
     bar.append("rect")
         .attr("x", 1)
         .attr("fill", "cornflowerblue")
-        .attr("width", x(bins[0].x1) - x(bins[0].x0) - 1)
-        .attr("height", function(d) { return height - y(d.length); });
-
-    bar.append("text")
-        .attr("dy", ".75em")
-        .attr("y", 6)
-        .attr("x", (x(bins[0].x1) - x(bins[0].x0)) / 2)
-        .attr("text-anchor", "middle")
-        .text(function(d) { return formatCount(d.length); });
-
-    svg.append("g")
-        .attr("class", "axis axis--x")
-        .attr("transform", "translate(0," + height + ")")
-        .call(d3.axisBottom(x));
-    
-}
-function recover_box(number){
-    d3.select("#histo-svg"+number).style("display", "none");
-    d3.select("#box-svg"+number).style("display", "inline-block");
+        .attr("height", function(){return each_height;})
+        .attr("width", 120)
+        .style("fill", function(d) {console.log(d); return "rgb(0, 0, " + (1 - d) * 300 + ")";})
+        ;
 }
 function draw_horizon_histo(number){
     data = refer[number];
@@ -298,13 +338,12 @@ function draw_horizon_histo(number){
 
     var y = d3.scaleLinear()
         .domain([minValue, maxValue])
-        .range([height, 0]);
+        .range([470, 0]);
     
     var bins = d3.histogram()
         .domain(y.domain())
-        .thresholds(y.ticks(20))
+        .thresholds(y.ticks(35))
         (data);
-    console.log(bins);
 
     var x = d3.scaleLinear()
         .domain([0, d3.max(bins, function(d) { 
@@ -314,7 +353,8 @@ function draw_horizon_histo(number){
     d3.select("#box-svg"+number).style("display", "none");
     var svg = d3.select("#histo-svg"+number)
         .style("display", "inline-block")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+//        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+    ;
     
 
     var bar = svg.selectAll(".bar")
@@ -323,6 +363,7 @@ function draw_horizon_histo(number){
         .attr("class", "bar")
         .attr("transform", function(d, i) { 
             return "translate(" + 0 + "," + y(d.x1) + ")"; });
+
 
     bar.append("rect")
         .attr("x", 1)
@@ -341,29 +382,18 @@ function draw_horizon_histo(number){
      svg.append("text").text(function(d){return d.label;})
           .attr("x", function(d){
             return 0;
-    //          return - (width + margin.left + margin.right) / 2;
           })
           .attr("y", function(d){
               return (height + margin.bottom + margin.top);
           })
+        .attr("class","eachLabel")
           .style("display", "block")
-//          .attr("position", "absolute")
           .attr("left", function(){
-//            return 0;
             return -(width + margin.left + margin.right)
           })
           .attr("font-family", "sans-serif")
           .attr("font-size", "10px")
           .attr("fill", "red"); 
-//    svg.append("circle")
-//            .attr("class", "highlight")
-//            .attr("cx", 10)
-//            .attr("cy", 470)
-//            .attr("stroke-width", 10)
-//            .attr("r", 5)
-//            .style("position", "absolute")
-//            .style("visibility", "hidden")
-//            .style("z-index", 20);   
     
     svg.append("g")
         .attr("class", "axis vertical--y")
@@ -372,137 +402,14 @@ function draw_horizon_histo(number){
 }
 
 function show_both(number){
-    data = refer[number];
-    var minValue = Math.min.apply(null, data);
-    var maxValue = Math.max.apply(null, data);
-
-    var formatCount = d3.format(",.0f");
-
-    var margin = {top: 10, right: 30, bottom: 30, left: 30};
-    var width = HORIZIN_HISTO_WIDTH - margin.left - margin.right;
-    var height = HORIZIN_HISTO_HEIGHT - margin.top - margin.bottom;
-
-    var y = d3.scaleLinear()
-        .domain([minValue, maxValue])
-        .range([height, 0]);
-    
-    var bins = d3.histogram()
-        .domain(y.domain())
-        .thresholds(y.ticks(20))
-        (data);
-    console.log(bins);
-
-    var x = d3.scaleLinear()
-        .domain([0, d3.max(bins, function(d) { 
-            return d.length; })])
-        .range([0, width]);
-
-//    d3.select("#box-svg"+number).style("display", "none");
-    var svg = d3.select("#histo-svg"+number)
-        .style("display", "absolute")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-    
-
-    var bar = svg.selectAll(".bar")
-        .data(bins)
-        .enter().append("g")
-        .attr("class", "bar")
-        .attr("transform", function(d, i) { 
-            return "translate(" + 0 + "," + y(d.x1) + ")"; });
-
-    bar.append("rect")
-        .attr("x", 1)
-        .attr("fill", "cornflowerblue")
-        .attr("height", y(bins[0].x0) - y(bins[0].x1))
-        .attr("width", function(d) { return x(d.length); });
-
-    bar.append("text")
-        .attr("dy", ".25em")
-        .attr("y", (y(bins[0].x0) - y(bins[0].x1)) / 2)
-        .attr("x", 80)
-        .style("fill", "cornflowerblue")
-        .attr("text-anchor", "middle")
-        .text(function(d) { return formatCount(d.length); });
-
-//    svg.append("circle")
-//            .attr("class", "highlight")
-//            .attr("cx", 10)
-//            .attr("cy", 470)
-//            .attr("stroke-width", 10)
-//            .attr("r", 5)
-//            .style("position", "absolute")
-//            .style("visibility", "hidden")
-//            .style("z-index", 20);   
-    
-    svg.append("g")
-        .attr("class", "axis vertical--y")
-        .call(d3.axisLeft(y));
-}
-
-function histo(number){
-    (function (global) {
-    refer = JSON.parse(global.localStorage.getItem("mySharedData"));
-}(window));
-    var data = window.refer[number];
-    console.log(data);
-    for(i in data){
-        data[i] = + data[i];
+    if(! visited[number]){
+        draw_horizon_histo(number);
+        visited[number] = 1;
     }
-    var minValue = Math.min.apply(null, data);
-    var maxValue = Math.max.apply(null, data);
-//    var data = d3.range(1000).map(d3.randomBates(10));
-
-    var formatCount = d3.format(",.0f");
-
-    var margin = {top: 10, right: 30, bottom: 30, left: 30},
-        width = 960 - margin.left - margin.right,
-        height = 500 - margin.top - margin.bottom;
-
-    var x = d3.scaleLinear()
-        .domain([minValue, maxValue])
-//        .range([0, 1]);
-        .rangeRound([0, width]);
-    console.log(x.domain());
-    var bins = d3.layout.histogram()
-        .domain(x.domain())
-//        .domain([0, 10])
-        .thresholds(x.ticks(20))
-        (data);
-
-    var y = d3.scaleLinear()
-        .domain([0, d3.max(bins, function(d) { return d.length; })])
-        .range([height, 0]);
-
-    var svg = d3.select("body").append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-      .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-    var bar = svg.selectAll(".bar")
-        .data(bins)
-      .enter().append("g")
-        .attr("class", "bar")
-        .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; });
-
-    bar.append("rect")
-        .attr("x", 1)
-        .attr("width", x(bins[0].x1) - x(bins[0].x0) - 1)
-        .attr("height", function(d) { return height - y(d.length); });
-
-    bar.append("text")
-        .attr("dy", ".75em")
-        .attr("y", 6)
-        .attr("x", (x(bins[0].x1) - x(bins[0].x0)) / 2)
-        .attr("text-anchor", "middle")
-        .text(function(d) { return formatCount(d.length); });
-
-    svg.append("g")
-        .attr("class", "axis axis--x")
-        .attr("transform", "translate(0," + height + ")")
-        .call(d3.axisBottom(x));
+    d3.select("#histo-svg"+number).style("display", "block").style("position", "relative");
+    d3.select("#box-svg"+number).style("display", "block").style("position", "absolute").style("top", "0px").style("left", "30px");
+    d3.select("#histo-svg"+number).select(".eachLabel").style("display","none");
 }
-
 
 
 
@@ -528,6 +435,7 @@ $("#clear_histo").click(function(){
 })
 //resort the svg according to the criterion users select
 //remove all the old svg and redraw all of it
+var isDesc = 0;
 $(".sortCriterion").click(function(){
         var currentCri = $(".display_current_cri").html();
         if(this.value == "mean"){
@@ -543,7 +451,14 @@ $(".sortCriterion").click(function(){
                 refer.sort(sortMin);
             }
             else if(this.value == "desc"){
-                currentCri += "  DESC";
+                if(!isDesc){
+                    currentCri += "  DESC";
+                    isDesc = 1;
+                }
+                else{
+                    currentCri = currentCri.substring(0,currentCri.length - 6);
+                    isDesc = 0;
+                }
                 refer.reverse();
             }
         var myNode = $("#chart").get(0);
@@ -565,6 +480,7 @@ $("#getInput").click(function(){
 $("#cancel").click(function(){
     float_window["_groups"][0][0]["style"].visibility = "hidden";
     hide_highlight();
+    clicked = 0;
 })
 
 //get quartiles 
@@ -602,19 +518,50 @@ function highlight(num){
         x_coorninate.push(10);
     }
     
-    var tmpHandler = d3.selectAll(".highlight")
+    var tmpHandler = 
+    d3.selectAll(".box-svg")
     .data(coordinate)
+    .append("circle")
+    .attr("class", "highlight" + current_click)
+    .attr("cx", 10)
+    .attr("stroke-width", 10)
+    .attr("r", 5)
+    .style("position", "absolute")
     .style("visibility", "visible")
-    .style("fill", "red")
+    .style("z-index", 20)
+    .style("fill", color_pool[current_click + 1])
+    .style("pointer-events", "none")
     .style("z-index", "15")
-    .attr("cx", "10")
     .attr("cy", function(d){ return d;});
 
 };
 
+$(".file").click(function(){
+    d3.select("#chart").selectAll("*").remove();
+    if(this.value == "ubiq2"){
+        getdata(0);
+    }
+    else if(this.value == "ubiq3"){
+        getdata(1);
+    }
+    else{
+        
+    }
+    $(".display_file_name").text(this.value);
+});
+                          
+$('[class^="highlight"]').click(function(){
+    alert($this.class);
+});
+$('[class^="highlight"]').mouseover(function(){
+    console.log("aaa");
+});
+$(".outlier").mouseover(function(){
+    console.log("aaa");
+});
 //mouseout event, hide all the highlight
 function hide_highlight(){
-    console.log("now hide");
-    var tmpHandler = d3.selectAll(".highlight")
-            .style("visibility", "hidden");
+    var tmpHandler = d3.selectAll(".highlight-1")
+            .style("display", "none")
+            .style("pointer-events", "none");
 }

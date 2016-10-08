@@ -204,36 +204,69 @@ d3.box = function() {
           .style("opacity", 1);
 //        var ssvg = g.selectAll("circle.highlight");
      
-          g.append("circle")
-            .attr("class", "highlight")
-            .attr("cx", 10)
-            .attr("cy", 470)
-            .attr("stroke-width", 10)
-            .attr("r", 5)
-            .style("position", "absolute")
-            .style("visibility", "hidden")
-            .style("z-index", 20);   
+//          g.append("circle")
+//            .attr("class", "highlight")
+//            .attr("cx", 10)
+//            .attr("cy", 470)
+//            .attr("stroke-width", 10)
+//            .attr("r", 5)
+//            .style("position", "absolute")
+//            .style("visibility", "hidden")
+//            .style("z-index", 20);   
         
         var tt = g.selectAll(".outlier")
-            .on("mouseover", function(){
-
-                //now d is after sorting.
+            .on("click", function(){
+                var i;
+                // find available colors
+                for(i = 0; i < 10; i++){
+                    if(visited_color[i] == 0){
+                        break;
+                    }
+                }
+                clicked = true;
+                visited_color[i] = 1;// set the visited bit of color vector
+                current_click = i; // set current_click
+                click_count += 1;
                 d = +d3.select(this).attr("index");
-                float_window["_groups"][0][0].textContent = document_name[d];
-                float_window["_groups"][0][0].style.visibility = "visible";
-                highlight(d);
+                highlight(d); // highlight them, with class name ends with current_click
+                
+                d3.selectAll(".highlight" + current_click)
+                .style("pointer-events", "auto")
+                .on("click", function(){
+                    //if clicked again, then hide all them.
+                    visited_color[i] = 0;
+                    click_count -= 1;
+                    var c = d3.select(this).attr("class");
+                    console.log(c);
+                    d3.selectAll("." + c).style("display", "none");
+                });
             })
-            .on("mousemove", function(){
-//                console.log(Event.pageY);
-//                console.log(Event.pageX);
-                float_window["_groups"][0][0].style["top"] = (event.pageY-10)+"px";
-                float_window["_groups"][0][0].style["left"] = (event.pageX+10)+"px";
+            .on("mouseover", function(){
+                    //each time mouseover, current_click should be -1, so the color is red
+                    d = +d3.select(this).attr("index");
+                    float_window["_groups"][0][0].textContent = document_name[d];
+                    float_window["_groups"][0][0].style.visibility = "visible";
+                    //current_click is -1, so they will be erased later by mouseout
+                    highlight(d);
+                
             })
         
+            .on("mousemove", function(){
+                    float_window["_groups"][0][0].style["top"] = (event.pageY-10)+"px";
+                    float_window["_groups"][0][0].style["left"] = (event.pageX+10)+"px";
+            })
+//        
             .on("mouseout", function(){
-                    float_window["_groups"][0][0]["style"].visibility = "hidden";
-                    hide_highlight();
-           });
+                float_window["_groups"][0][0]["style"].visibility = "hidden";
+                //hide red ones no matter clicked or not
+                hide_highlight();
+                
+                //everytime leave,  reset the current_click and clicked
+                current_click = -1;
+                clicked = false;
+           })
+            
+            ;
           
       
 //        var tmp = g.selectAll(".outlier")
