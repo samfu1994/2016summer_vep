@@ -53,6 +53,11 @@ body {
     display:block;
     white-space: nowrap;
 }
+    #small_chart{
+        
+        display:none;
+        white-space: nowrap;
+    }
 </style>
 </header>
     <body>
@@ -62,6 +67,9 @@ body {
     <button class="file" value="void">clear</button>
     <span>Current file: &nbsp;</span>
     <span class="display_file_name" style="color:darkblue"> ubiq2 </span>
+    &nbsp;&nbsp;&nbsp;&nbsp; 
+    <button class="toggle_display">toggle display</button>
+    
     <br>
     <button class="sortCriterion" value="mean">MEAN</button>
     <button class="sortCriterion" value="min">MIN</button>
@@ -73,18 +81,21 @@ body {
     <button id="getInput">Search</button>
     <button id="cancel">Cancel</button>
     &nbsp;&nbsp;&nbsp;&nbsp;
+    <button id="change_all_histo">Show histo</button>
+    <button id="change_all_color">Show color</button>
+    <button id="change_all_box">Show box</button>
+    
     <span>current order:</span>
     &nbsp;&nbsp;
 
     <span class="display_current_cri" style="color:blue">default</span>
     <br>
-    <div id="chart">
-        
+    <div id="small_chart"></div>
+    <div id="chart">        
     </div>
     <div id="reference">
         <svg></svg>
     </div>
-    <div id="histo_chart"></div>
 <!--    -->
     <script src="main.js"></script>
     <script>

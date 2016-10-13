@@ -8,12 +8,15 @@ var min = [],
 var document_name = [];
 var name2index = new Object;
 var float_window;
+var outlier_size;
 var HORIZIN_HISTO_HEIGHT = 500;
 var HORIZIN_HISTO_WIDTH = 120;
 var tooltip;
 var clicked = false;
 var current_click = -1;
 var click_count = 0;
+var showText;
+var showSmall = 0;
 var files = ["data/transpose_ubiq2.csv", "data/20000_ubiq3.csv"]
 var color_pool = ["red", "aqua", "blue", "blueviolet", "burlywood", "cadetblue",
                  "chartreuse", "darkblue", "darkorange", "darkgrey", "brown"];
@@ -21,6 +24,7 @@ var visited_color = new Array(color_pool.length)
 for(i = 0; i < color_pool.length; i++)
     visited_color[i] = 0;
 
+var visited_color_coding = new Array(500);
 var visited = new Array(500);
 //var svg;
 
@@ -101,6 +105,8 @@ function getdata(file_index){
       }
 //        alert(refer[0].length);
       draw();
+            draw_small();
+
 
       float_window = d3.select("body").append("div");
         float_window.style("position", "absolute")
@@ -111,6 +117,8 @@ function getdata(file_index){
       }
 )};
 function draw(){
+    showText = 1;
+    outlier_size = 4;
     //define chart, will be called later
     for(i = 0; i < 500; i++){
         visited[i] = 0;
@@ -187,7 +195,7 @@ function draw(){
                 
             });
                 
-                
+        
         var changeButtons = containers
             .append("button")
             .attr("type", "button")
@@ -198,15 +206,17 @@ function draw(){
             .style("margin-top", "5px")
             .style("margin-bottom", "5px")
             .on("click", function(d, i){
-                if( d3.select("#histo-svg" + i).style("display") == "none"){
+                if( d3.select("#chart").select("#histo-svg" + i).style("display") == "none"){
                     //to show histogram
                     
                     if(visited[i]){
-                        d3.select("#histo-svg" + i).style("display", "block").style("position", "relative");
+                        d3.select("#chart").select("#histo-svg" + i).style("display", "block").style("position", "relative");
                     
-                        d3.select("#box-svg" + i).style("display", "none").style("position", "relative");
+                        d3.select("#chart").select("#box-svg" + i).style("display", "none").style("position", "relative");
                         
-                        d3.select("#histo-svg"+i).select(".eachLabel").style("display","block");
+                        d3.select("#chart").select("#color-svg" + i).style("display", "none").style("position", "relative");
+                        
+                        d3.select("#chart").select("#histo-svg"+i).select(".eachLabel").style("display","block");
                     }
                     else{
                         draw_horizon_histo(i);
@@ -214,8 +224,9 @@ function draw(){
                     }
                 }
                 else{
-                    d3.select("#histo-svg" + i).style("display", "none").style("position", "relative");
-                    d3.select("#box-svg" + i).style("display", "block").style("position", "relative");
+                    d3.select("#chart").select("#histo-svg" + i).style("display", "none").style("position", "relative");
+                    d3.select("#chart").select("#color-svg" + i).style("display", "none").style("position", "relative");
+                    d3.select("#chart").select("#box-svg" + i).style("display", "block").style("position", "relative");
                     
                 }
             });
@@ -264,6 +275,68 @@ function draw(){
         .attr("height", function() {return height + margin.bottom + margin.top - clickMargin;})
           .attr("pointer-events", "none")
 //        .on("click", function(d, i){draw_histo(i);})
+      ;
+    
+      //draw the boxplot
+      svg.call(chart);
+    };
+
+function draw_small(){
+    //define chart, will be called later
+    showText = 0;
+    outlier_size = 2;
+    var horizon_margin = 2;
+    var width = 10;
+    var height = 300;
+    var chart = d3.box()
+    .whiskers(iqr(3))
+    .width(width)
+    .height(height);    
+    //container of each svg                
+    var containers = d3.select("#small_chart").selectAll("div")
+          .data(refer)
+          .enter()
+          .append("div")
+          .attr("id", function(d, i){return "container" + i;})
+          .attr("class", "single_container")
+          .style("display","inline-block")
+          .style("width", "11.5px")
+          .style("height", "300px")
+          .style("position", "relative");
+    
+    //each svg has a histogram plot and a boxplot
+    
+    var histo_svg = containers
+            .append("svg")
+            .attr("class","color-svg")
+            .style("display", "none")
+            .attr("id", function(d, i){return "color-svg" + i;})
+            .attr("width", function(d, i){
+                    return width; 
+              })
+            .attr("height", height); //this is the boxplot
+    var svg = containers
+          .append("svg")
+          .attr("class", "box box-svg")
+          .attr("index", function(d, i){return i;})
+          .attr("id", function(d, i){return "box-svg" + i;})
+          .attr("width", function(d, i){
+                return width; 
+          })
+          .attr("height", height);    
+    //show to histogram in place
+    
+      //draw 
+      svg.append("rect")
+        .attr("class", "btn")
+        .attr("number", function(d, i){return i;})
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("position", "relative")
+        .style("z-index", 1)
+        .attr("width", function() {return width;})
+        .attr("height", function() {return height;})
+          .attr("pointer-events", "none")
       ;
     
       //draw the boxplot
@@ -322,7 +395,7 @@ function draw_color_coding(number){
         .attr("fill", "cornflowerblue")
         .attr("height", function(){return each_height;})
         .attr("width", 120)
-        .style("fill", function(d) {console.log(d); return "rgb(0, 0, " + (1 - d) * 300 + ")";})
+        .style("fill", function(d) {return "rgb(0, 0, " + (1 - d) * 300 + ")";})
         ;
 }
 function draw_horizon_histo(number){
@@ -350,7 +423,6 @@ function draw_horizon_histo(number){
             return d.length; })])
         .range([0, width]);
 
-    d3.select("#box-svg"+number).style("display", "none");
     var svg = d3.select("#histo-svg"+number)
         .style("display", "inline-block")
 //        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
@@ -402,13 +474,13 @@ function draw_horizon_histo(number){
 }
 
 function show_both(number){
-    if(! visited[number]){
+    if(!visited[number]){
         draw_horizon_histo(number);
         visited[number] = 1;
     }
-    d3.select("#histo-svg"+number).style("display", "block").style("position", "relative");
-    d3.select("#box-svg"+number).style("display", "block").style("position", "absolute").style("top", "0px").style("left", "30px");
-    d3.select("#histo-svg"+number).select(".eachLabel").style("display","none");
+    d3.select("#chart").select("#histo-svg"+number).style("display", "block").style("position", "relative");
+    d3.select("#chart").select("#box-svg"+number).style("display", "block").style("position", "absolute").style("top", "0px").style("left", "30px");
+    d3.select("#chart").select("#histo-svg"+number).select(".eachLabel").style("display","none");
 }
 
 
@@ -434,7 +506,7 @@ $("#clear_histo").click(function(){
     .remove();
 })
 //resort the svg according to the criterion users select
-//remove all the old svg and redraw all of it
+//remove all the old svg and redraw all of it 
 var isDesc = 0;
 $(".sortCriterion").click(function(){
         var currentCri = $(".display_current_cri").html();
@@ -461,19 +533,29 @@ $(".sortCriterion").click(function(){
                 }
                 refer.reverse();
             }
-        var myNode = $("#chart").get(0);
-        while (myNode.firstChild) {
-            myNode.removeChild(myNode.firstChild);
-        }    
+        
     
         $(".display_current_cri").text(currentCri);
-        draw();
+        if(showSmall){
+            var myNode = $("#small_chart").get(0);
+            while (myNode.firstChild) {
+                myNode.removeChild(myNode.firstChild);
+            }    
+            draw_small();
+            
+        }
+        else{
+            var myNode = $("#chart").get(0);
+            while (myNode.firstChild) {
+                myNode.removeChild(myNode.firstChild);
+            }    
+            draw();
+        }
 });
 
 $("#getInput").click(function(){
     var name = document.getElementById('myInput').value;
     var num = +name2index[name];
-    console.log(num);
     highlight(num);
 });
 
@@ -481,6 +563,58 @@ $("#cancel").click(function(){
     float_window["_groups"][0][0]["style"].visibility = "hidden";
     hide_highlight();
     clicked = 0;
+});
+$("#change_all_histo").click(function(){
+    if(!showSmall){
+        for(var i = 0; i < refer.length; i++){
+            if(!visited[i]){
+                console.log("here");
+                draw_horizon_histo(i);
+                visited[i] = 1;
+                d3.select("#chart").select("#box-svg" + i).style("display", "none").style("position", "absolute");
+            }
+            else{
+                d3.select("#chart").select("#histo-svg" + i).style("display", "block").style("position", "relative");
+
+                d3.select("#chart").select("#box-svg" + i).style("display", "none").style("position", "relative");
+                d3.select("#color-svg" + i).style("display", "none").style("position", "relative");
+
+                d3.select("#chart").select("#histo-svg"+i).select(".eachLabel").style("display","block");
+            }
+        }
+    }
+});
+$("#change_all_color").click(function(){
+    if(showSmall){
+        for(var i = 0; i < refer.length; i++){
+            if(!visited_color_coding[i]){
+                draw_color_coding(i);
+                visited_color_coding[i] = 1;
+                d3.select("#small_chart").select("#box-svg" + i).style("display", "none").style("position", "absolute");
+            }
+            else{
+                d3.select("#small_chart").select("#histo-svg" + i).style("display", "none").style("position", "relative");
+
+                d3.select("#small_chart").select("#box-svg" + i).style("display", "none").style("position", "relative");
+                d3.select("#small_chart").select("#color-svg" + i).style("display", "block").style("position", "relative");
+
+                d3.select("#small_chart").select("#histo-svg"+i).select(".eachLabel").style("display","block");
+            }
+        }
+    }
+});
+
+
+$("#change_all_box").click(function(){
+    for(var i = 0; i < refer.length; i++){
+        d3.select("#small_chart").select("#histo-svg" + i).style("display", "none").style("position", "relative");
+        d3.select("#small_chart").select("#color-svg" + i).style("display", "none").style("position", "relative");
+        d3.select("#small_chart").select("#box-svg" + i).style("display", "block").style("position", "relative");
+        
+        d3.select("#chart").select("#histo-svg" + i).style("display", "none").style("position", "relative");
+        d3.select("chart").select("#color-svg" + i).style("display", "none").style("position", "relative");
+        d3.select("#chart").select("#box-svg" + i).style("display", "block").style("position", "relative");
+    }
 })
 
 //get quartiles 
@@ -519,7 +653,8 @@ function highlight(num){
     }
     
     var tmpHandler = 
-    d3.selectAll(".box-svg")
+    d3.select("#chart")
+    .selectAll(".box-svg")
     .data(coordinate)
     .append("circle")
     .attr("class", "highlight" + current_click)
@@ -554,6 +689,19 @@ function highlight(num){
     .text(document_name[num]);
 };
 
+$(".toggle_display").click(function(){
+    if(showSmall){
+        //to show big
+        $("#small_chart").css("display", "none");
+        $("#chart").css("display", "block");
+        showSmall = 0;
+    }
+    else{
+        showSmall = 1;
+        $("#chart").css("display", "none");      
+        $("#small_chart").css("display", "block");        
+    }
+});
 $(".file").click(function(){
     d3.select("#chart").selectAll("*").remove();
     if(this.value == "ubiq2"){
