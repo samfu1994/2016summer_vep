@@ -17,7 +17,12 @@ var current_click = -1;
 var click_count = 0;
 var showText;
 var showSmall = 0;
-var files = ["data/transpose_ubiq2.csv", "data/20000_ubiq3.csv"]
+var currentFILE = "NULL";
+var showBox = true;
+var currentPlot = "box";
+var already_highlight = new Set();
+var files = ["transpose_ubiq2.csv", "20000_ubiq3.csv"];
+var pre_path = "data/";
 var color_pool = ["red", "aqua", "blue", "blueviolet", "burlywood", "cadetblue",
                  "chartreuse", "darkblue", "darkorange", "darkgrey", "brown"];
 var visited_color = new Array(color_pool.length)
@@ -25,6 +30,8 @@ for(i = 0; i < color_pool.length; i++)
     visited_color[i] = 0;
 
 var visited_color_coding = new Array(500);
+for(i = 0; i < 500; i++)
+    visited_color_coding[i] = 0;
 var visited = new Array(500);
 //var svg;
 
@@ -46,12 +53,13 @@ var findMean = function(arr){
 }
 
 var refer = new Array; //global var to store the input 2d mat
+var origin_refer = new Array;
 var clickMargin = 10;
 
 
-function getdata(file_index){
-    
-    d3.csv(files[file_index], function(error, csv) {
+function getdata(file){
+    currentFILE = file;
+    d3.csv(pre_path + file, function(error, csv) {
       if (error) throw error;
 
       Object.size = function(obj) {
@@ -103,9 +111,10 @@ function getdata(file_index){
           refer[col].minValue = +min[col];
           refer[col].label = label[col]; 
       }
-//        alert(refer[0].length);
-      draw();
-            draw_small();
+        
+      origin_refer = refer.slice();
+        draw();
+        draw_small();
 
 
       float_window = d3.select("body").append("div");
@@ -117,6 +126,8 @@ function getdata(file_index){
       }
 )};
 function draw(){
+    if(currentPlot == "box") showBox = 1;
+    else showBox = 0;
     showText = 1;
     outlier_size = 4;
     //define chart, will be called later
@@ -152,15 +163,6 @@ function draw(){
                     return width + margin.left + margin.right; 
               })
             .attr("height", height + margin.bottom + margin.top); //this is the boxplot
-    var histo_svg = containers
-            .append("svg")
-            .attr("class","color-svg")
-            .style("display", "none")
-            .attr("id", function(d, i){return "color-svg" + i;})
-            .attr("width", function(d, i){
-                    return width + margin.left + margin.right; 
-              })
-            .attr("height", height + margin.bottom + margin.top); //this is the boxplot
     var svg = containers
           .append("svg")
           .attr("class", "box box-svg")
@@ -169,31 +171,13 @@ function draw(){
           .attr("width", function(d, i){
                 return width + margin.left + margin.right; 
           })
-          .attr("height", height + margin.bottom + margin.top);    
+          .attr("height", height + margin.bottom + margin.top);  
+    
+//    if(!showBox){
+//        histo_svg.style("display", "block");
+//        svg.style("display", "none");
+//    }
     //show to histogram in place
-      var colorButtons = containers
-            .append("button")
-            .attr("type", "button")
-            .attr("class","btn btn-info")
-            .text("color plot")
-            .style("width", "100px")
-            .style("display", "block")
-            .style("margin-top", "5px")
-            .style("margin-bottom", "5px")
-            .on("click", function(d, i){
-                var cur = d3.select("#color-svg" + i);
-                console.log(cur.style);
-                if(d3.select("#color-svg" + i).style("display") == "none"){
-                    d3.select("#histo-svg" + i).style("display", "none").style("position", "relative");
-                    d3.select("#box-svg" + i).style("display", "none").style("position", "relative");
-                    draw_color_coding(i);
-                }
-                else{
-                    d3.select("#color-svg" + i).style("display", "none").style("position", "relative");
-                    d3.select("#box-svg" + i).style("display", "block").style("position", "relative");
-                }
-                
-            });
                 
         
         var changeButtons = containers
@@ -274,74 +258,29 @@ function draw(){
         .attr("width", function() {return width + margin.left + margin.right - clickMargin;})
         .attr("height", function() {return height + margin.bottom + margin.top - clickMargin;})
           .attr("pointer-events", "none")
-//        .on("click", function(d, i){draw_histo(i);})
       ;
     
       //draw the boxplot
       svg.call(chart);
+      if(!showBox){
+          for(var i = 0; i < refer.length; i++){
+            if(!visited[i]){
+                            draw_horizon_histo(i);
+                            visited[i] = 1;
+                            d3.select("#chart").select("#box-svg" + i).style("display", "none").style("position", "absolute");
+                        }
+              else{
+                  d3.select("#chart").select("#histo-svg" + i).style("display", "block").style("position", "relative");
+
+                  d3.select("#chart").select("#box-svg" + i).style("display", "none").style("position", "relative");
+                            d3.select("#color-svg" + i).style("display", "none").style("position", "relative");
+
+                            d3.select("#chart").select("#histo-svg"+i).select(".eachLabel").style("display","block");
+              }
+          }
+      }
     };
 
-function draw_small(){
-    //define chart, will be called later
-    showText = 0;
-    outlier_size = 2;
-    var horizon_margin = 2;
-    var width = 10;
-    var height = 300;
-    var chart = d3.box()
-    .whiskers(iqr(3))
-    .width(width)
-    .height(height);    
-    //container of each svg                
-    var containers = d3.select("#small_chart").selectAll("div")
-          .data(refer)
-          .enter()
-          .append("div")
-          .attr("id", function(d, i){return "container" + i;})
-          .attr("class", "single_container")
-          .style("display","inline-block")
-          .style("width", "11.5px")
-          .style("height", "300px")
-          .style("position", "relative");
-    
-    //each svg has a histogram plot and a boxplot
-    
-    var histo_svg = containers
-            .append("svg")
-            .attr("class","color-svg")
-            .style("display", "none")
-            .attr("id", function(d, i){return "color-svg" + i;})
-            .attr("width", function(d, i){
-                    return width; 
-              })
-            .attr("height", height); //this is the boxplot
-    var svg = containers
-          .append("svg")
-          .attr("class", "box box-svg")
-          .attr("index", function(d, i){return i;})
-          .attr("id", function(d, i){return "box-svg" + i;})
-          .attr("width", function(d, i){
-                return width; 
-          })
-          .attr("height", height);    
-    //show to histogram in place
-    
-      //draw 
-      svg.append("rect")
-        .attr("class", "btn")
-        .attr("number", function(d, i){return i;})
-        .attr("x", 0)
-        .attr("y", 0)
-        .attr("position", "relative")
-        .style("z-index", 1)
-        .attr("width", function() {return width;})
-        .attr("height", function() {return height;})
-          .attr("pointer-events", "none")
-      ;
-    
-      //draw the boxplot
-      svg.call(chart);
-    };
 
 
 function recover_box(number){
@@ -349,55 +288,7 @@ function recover_box(number){
     d3.select("#box-svg"+number).style("display", "inline-block");
 }
 
-function draw_color_coding(number){
-    data = refer[number];
-    var minValue = Math.min.apply(null, data);
-    var maxValue = Math.max.apply(null, data);
 
-    var formatCount = d3.format(",.0f");
-
-    var margin = {top: 10, right: 30, bottom: 30, left: 30};
-    var width = HORIZIN_HISTO_WIDTH - margin.left - margin.right;
-    var height = HORIZIN_HISTO_HEIGHT - margin.top - margin.bottom;
-
-    var y = d3.scaleLinear()
-        .domain([minValue, maxValue])
-        .range([470, 0]);
-    
-    var bins = d3.histogram()
-        .domain(y.domain())
-        .thresholds(y.ticks(35))
-        (data);
-
-    var x = d3.scaleLinear()
-        .domain([0, d3.max(bins, function(d) { 
-            return d.length; })])
-        .range([0, width]);
-
-    var svg = d3.select("#color-svg"+number)
-        .style("display", "inline-block")
-    ;
-    var num_bar = bins.length
-    var each_height = 470.0 / num_bar
-
-    var bar = svg.selectAll(".bar")
-        .data(bins)
-        .enter().append("g")
-        .attr("class", "bar")
-        .attr("transform", function(d, i) { 
-            if(y(d.x1) == 470)
-                return "translate(" + 0 + ", 500 )";
-
-            return "translate(" + 0 + "," + y(d.x1) + ")"; });
-
-    bar.append("rect")
-        .attr("x", 1)
-        .attr("fill", "cornflowerblue")
-        .attr("height", function(){return each_height;})
-        .attr("width", 120)
-        .style("fill", function(d) {return "rgb(0, 0, " + (1 - d) * 300 + ")";})
-        ;
-}
 function draw_horizon_histo(number){
     data = refer[number];
     var minValue = Math.min.apply(null, data);
@@ -425,7 +316,6 @@ function draw_horizon_histo(number){
 
     var svg = d3.select("#histo-svg"+number)
         .style("display", "inline-block")
-//        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
     ;
     
 
@@ -499,124 +389,6 @@ function iqr(k) {
   };
 }
 
-$("#clear_histo").click(function(){
-    d3.select("#histo_chart").selectAll("svg")
-    .data([])
-    .exit()
-    .remove();
-})
-//resort the svg according to the criterion users select
-//remove all the old svg and redraw all of it 
-var isDesc = 0;
-$(".sortCriterion").click(function(){
-        var currentCri = $(".display_current_cri").html();
-        if(this.value == "mean"){
-                currentCri = "mean";
-                refer.sort(sortMean);
-            }
-            else if(this.value == "max"){
-                currentCri = "max";
-                refer.sort(sortMax);
-            }
-            else if(this.value == "min"){
-                currentCri = "min";
-                refer.sort(sortMin);
-            }
-            else if(this.value == "desc"){
-                if(!isDesc){
-                    currentCri += "  DESC";
-                    isDesc = 1;
-                }
-                else{
-                    currentCri = currentCri.substring(0,currentCri.length - 6);
-                    isDesc = 0;
-                }
-                refer.reverse();
-            }
-        
-    
-        $(".display_current_cri").text(currentCri);
-        if(showSmall){
-            var myNode = $("#small_chart").get(0);
-            while (myNode.firstChild) {
-                myNode.removeChild(myNode.firstChild);
-            }    
-            draw_small();
-            
-        }
-        else{
-            var myNode = $("#chart").get(0);
-            while (myNode.firstChild) {
-                myNode.removeChild(myNode.firstChild);
-            }    
-            draw();
-        }
-});
-
-$("#getInput").click(function(){
-    var name = document.getElementById('myInput').value;
-    var num = +name2index[name];
-    highlight(num);
-});
-
-$("#cancel").click(function(){
-    float_window["_groups"][0][0]["style"].visibility = "hidden";
-    hide_highlight();
-    clicked = 0;
-});
-$("#change_all_histo").click(function(){
-    if(!showSmall){
-        for(var i = 0; i < refer.length; i++){
-            if(!visited[i]){
-                console.log("here");
-                draw_horizon_histo(i);
-                visited[i] = 1;
-                d3.select("#chart").select("#box-svg" + i).style("display", "none").style("position", "absolute");
-            }
-            else{
-                d3.select("#chart").select("#histo-svg" + i).style("display", "block").style("position", "relative");
-
-                d3.select("#chart").select("#box-svg" + i).style("display", "none").style("position", "relative");
-                d3.select("#color-svg" + i).style("display", "none").style("position", "relative");
-
-                d3.select("#chart").select("#histo-svg"+i).select(".eachLabel").style("display","block");
-            }
-        }
-    }
-});
-$("#change_all_color").click(function(){
-    if(showSmall){
-        for(var i = 0; i < refer.length; i++){
-            if(!visited_color_coding[i]){
-                draw_color_coding(i);
-                visited_color_coding[i] = 1;
-                d3.select("#small_chart").select("#box-svg" + i).style("display", "none").style("position", "absolute");
-            }
-            else{
-                d3.select("#small_chart").select("#histo-svg" + i).style("display", "none").style("position", "relative");
-
-                d3.select("#small_chart").select("#box-svg" + i).style("display", "none").style("position", "relative");
-                d3.select("#small_chart").select("#color-svg" + i).style("display", "block").style("position", "relative");
-
-                d3.select("#small_chart").select("#histo-svg"+i).select(".eachLabel").style("display","block");
-            }
-        }
-    }
-});
-
-
-$("#change_all_box").click(function(){
-    for(var i = 0; i < refer.length; i++){
-        d3.select("#small_chart").select("#histo-svg" + i).style("display", "none").style("position", "relative");
-        d3.select("#small_chart").select("#color-svg" + i).style("display", "none").style("position", "relative");
-        d3.select("#small_chart").select("#box-svg" + i).style("display", "block").style("position", "relative");
-        
-        d3.select("#chart").select("#histo-svg" + i).style("display", "none").style("position", "relative");
-        d3.select("chart").select("#color-svg" + i).style("display", "none").style("position", "relative");
-        d3.select("#chart").select("#box-svg" + i).style("display", "block").style("position", "relative");
-    }
-})
-
 //get quartiles 
 function getQuar(d, i){
     var q1 = d.quartiles[0],
@@ -627,6 +399,73 @@ function getQuar(d, i){
     while (d[++i] < q1 - iqr);
     while (d[--j] > q3 + iqr);
     return [i, j];
+};
+
+function redraw(){
+            var myNode = $("#small_chart").get(0);
+            while (myNode.firstChild) {
+                myNode.removeChild(myNode.firstChild);
+            }    
+            draw_small();
+
+            var myNode = $("#chart").get(0);
+            while (myNode.firstChild) {
+                myNode.removeChild(myNode.firstChild);
+            }    
+            draw();
+    if(showSmall){
+        //to show big
+        $("#small_chart").css("display", "block");
+        $("#chart").css("display", "none");
+    }
+    else{
+        $("#chart").css("display", "block");      
+        $("#small_chart").css("display", "none");        
+    }
+    
+    for(var i = 0; i < 10; i++){
+        visited_color[i] = false;
+    }
+    for(let item of already_highlight){
+        var i;
+        // find available colors
+        for(i = 0; i < 10; i++){
+            if(visited_color[i] == false){
+                break;
+            }
+        }
+        clicked = true;
+        visited_color[i] = 1;// set the visited bit of color vector
+        current_click = i; // set current_click
+        click_count += 1;
+        d = +item;
+        highlight(d); // highlight them, with class name ends with current_click
+        d3.selectAll(".highlight" + current_click)
+                .style("pointer-events", "auto")
+                .attr("index", d)
+                .on("click", function(){
+                    //if clicked again, then hide all them.
+                    visited_color[i] = 0;
+                    click_count -= 1;
+                    var c = d3.select(this).attr("class");
+                    d3.selectAll("." + c).style("display", "none");
+                    already_highlight.delete(d3.select(this).attr(index));
+                })
+                .on("mouseover", function(){
+                    //each time mouseover, current_click should be -1, so the color is red
+                    d = +d3.select(this).attr("index");
+                    float_window["_groups"][0][0].textContent = document_name[d];
+                    float_window["_groups"][0][0].style.visibility = "visible";                
+                    })
+                .on("mousemove", function(){
+                    float_window["_groups"][0][0].style["top"] = (event.pageY-10)+"px";
+                    float_window["_groups"][0][0].style["left"] = (event.pageX+10)+"px";
+                    })
+                .on("mouseout", function(){
+                    float_window["_groups"][0][0]["style"].visibility = "hidden";
+                    })
+                ;
+    }
 };
 
 //highlight all the values of the selected document in each svg
@@ -669,6 +508,24 @@ function highlight(num){
     .style("z-index", "15")
     .attr("cy", function(d){ return d;});
     
+    
+    var tmpHandler = 
+    d3.select("#small_chart")
+    .selectAll(".box-svg")
+    .data(coordinate)
+    .append("circle")
+    .attr("class", "highlight" + current_click)
+    .attr("cx", 5)
+    .attr("stroke-width", 10)
+    .attr("r", 2)
+    .style("position", "absolute")
+    .style("visibility", "visible")
+    .style("z-index", 20)
+    .style("fill", color_pool[current_click + 1])
+    .style("pointer-events", "none")
+    .style("z-index", "15")
+    .attr("cy", function(d){ return d;});
+    
     d3.select("#reference")
     .select("svg")
     .append("circle")
@@ -689,45 +546,10 @@ function highlight(num){
     .text(document_name[num]);
 };
 
-$(".toggle_display").click(function(){
-    if(showSmall){
-        //to show big
-        $("#small_chart").css("display", "none");
-        $("#chart").css("display", "block");
-        showSmall = 0;
-    }
-    else{
-        showSmall = 1;
-        $("#chart").css("display", "none");      
-        $("#small_chart").css("display", "block");        
-    }
-});
-$(".file").click(function(){
-    d3.select("#chart").selectAll("*").remove();
-    if(this.value == "ubiq2"){
-        getdata(0);
-    }
-    else if(this.value == "ubiq3"){
-        getdata(1);
-    }
-    else{
-        
-    }
-    $(".display_file_name").text(this.value);
-});
-                          
-$('[class^="highlight"]').click(function(){
-    alert($this.class);
-});
-$('[class^="highlight"]').mouseover(function(){
-    console.log("aaa");
-});
-$(".outlier").mouseover(function(){
-    console.log("aaa");
-});
 //mouseout event, hide all the highlight
 function hide_highlight(){
     var tmpHandler = d3.selectAll(".highlight-1")
             .style("display", "none")
             .style("pointer-events", "none");
 }
+
