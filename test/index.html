@@ -2,32 +2,40 @@
 <html lang="en" ng-app="myApp">
 <header>
 <meta charset="utf-8">
-<!--   <script src="//d3js.org/d3.v4.0.0-alpha.45.min.js"></script>-->
+
     <script src="//d3js.org/d3.v4.min.js"></script>
-<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.3/d3.min.js"></script>-->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.9/css/jquery.dataTables.min.css">
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script src="https://cdn.datatables.net/1.10.9/js/jquery.dataTables.min.js"></script>
+<!--  <script src="gene_data.js"></script>-->
+  <script src="makeTable.js"></script>
+    
+    
     <script src="box.js"></script>
     <script src="histogram-chart.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-
-
 
 <link rel="stylesheet" type="text/css" href="css/style.css">
     <script src="main.js"></script>
     <script src="event.js"></script>
     <script src="small_mode.js"></script>
     <script src=angular_event.js></script>
+
+
     </header>
     <body>
     
     <div class="container container1">
         <div class="row">
             <div class="page-header col-md-8">
-                <h1>VEP Features Viewer</h1>
+                <h1>Test Viewer</h1>
             </div>
-            <div class="page-header col-md-4 panel panel-default">By Michael Gleicher and Hao Fu <br>Built for the <a href="http://graphics.cs.wisc.edu/WP/vep/">Visualizing English Print Project</a> </div>
+            <div class="page-header col-md-4 panel panel-default">
+                by UW Graphics Lab.
+<!--            By Michael Gleicher and Hao Fu <br>Built for the <a href="http://graphics.cs.wisc.edu/WP/vep/">Visualizing English Print Project</a> -->
+            </div>
         </div>
         <div class="row">
             <div class="col-md-12">
@@ -80,7 +88,7 @@
                <div class="dropdown">
                    Select file:
                    <br>
-                   <button class="btn btn-default dropdown-toggle" id="FILE" type="button" data-toggle="dropdown"> {{currentFILE}} 
+                   <button class="btn btn-default dropdown-toggle fileButton" id="FILE" type="button" data-toggle="dropdown"> {{currentFILE}} 
                         <span class="caret"></span> </button>
                         <ul class="dropdown-menu">
                             <li ng-repeat="a in files"><a ng-click="getdata(a)">{{a}}</a></li>
@@ -101,9 +109,9 @@
                     </div>
                 </div>
                 <input type="checkbox" id="reverse-order" ng-model="reverse_order" ng-click="callReverse()">
-                &nbsp; In reverse order
+                &nbsp; In Descending order
                 <br>
-                <button class="btn btn-danger" ng-click="toggle_view()">Toggle View</button>
+                <button class="btn btn-danger" ng-click="toggle_view()">{{viewButton}}</button>
                 <br>
                 Current Plot:
                 <br>
@@ -125,48 +133,14 @@
                     
                 </div>
             </div>
+            
+            <div id="datatable"></div>
 
         </div>
-    </div>
+        </div>
+    <script>
 
-<!--
-    
-    <button class="file" value="ubiq2">Ubiq2</button>
-    <button class="file" value="ubiq3">Ubiq3</button>
-    <button class="file" value="void">clear</button>
--->
-<!--    <span>Current file: &nbsp;</span>-->
-<!--
-    <span class="display_file_name" styleftle="color:darkblue"> ubiq2 </span>
-    &nbsp;&nbsp;&nbsp;&nbsp; 
-    <button class="toggle_display">toggle display</button>
-    
-    <br>
-    <button class="sortCriterion" value="mean">MEAN</button>
-    <button class="sortCriterion" value="min">MIN</button>
-    <button class="sortCriterion" value="max">MAX</button>
-    <button class="sortCriterion" value="desc">DESC</button>
-    <button id="clear_histo">CLEAR HISTOGRAM</button>
-    &nbsp;&nbsp;&nbsp;&nbsp;
-    <input type="text" id="myInput">
-    <button id="getInput">Search</button>
-    <button id="cancel">Cancel</button>
-    &nbsp;&nbsp;&nbsp;&nbsp;
-    <button id="change_all_histo">Show histo</button>
-    <button id="change_all_color">Show color</button>
-    <button id="change_all_box">Show box</button>
-    
-    <span>current order:</span>
-    &nbsp;&nbsp;
-
-    <span class="display_current_cri" style="color:blue">default</span>
--->
-    <br>
-<!--
-    <div id="small_chart"></div>
-    <div id="chart">        
--->
-<!--    </div>-->
+    </script>
     <div id="reference">
         <svg></svg>
     </div>

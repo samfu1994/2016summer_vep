@@ -438,37 +438,38 @@ function redraw(){
         current_click = i; // set current_click
         click_count += 1;
         d = +item;
-        highlight(d); // highlight them, with class name ends with current_click
-        d3.selectAll(".highlight" + current_click)
-                .style("pointer-events", "auto")
-                .attr("index", d)
-                .on("click", function(){
-                    //if clicked again, then hide all them.
-                    visited_color[i] = 0;
-                    click_count -= 1;
-                    var c = d3.select(this).attr("class");
-                    d3.selectAll("." + c).style("display", "none");
-                    already_highlight.delete(d3.select(this).attr(index));
-                })
-                .on("mouseover", function(){
-                    //each time mouseover, current_click should be -1, so the color is red
-                    d = +d3.select(this).attr("index");
-                    float_window["_groups"][0][0].textContent = document_name[d];
-                    float_window["_groups"][0][0].style.visibility = "visible";                
-                    })
-                .on("mousemove", function(){
-                    float_window["_groups"][0][0].style["top"] = (event.pageY-10)+"px";
-                    float_window["_groups"][0][0].style["left"] = (event.pageX+10)+"px";
-                    })
-                .on("mouseout", function(){
-                    float_window["_groups"][0][0]["style"].visibility = "hidden";
-                    })
-                ;
+        my_highlight(d); // highlight them, with class name ends with current_click
+//        d3.selectAll(".highlight" + current_click)
+//                .style("pointer-events", "auto")
+//                .attr("index", d)
+//                .on("click", function(){
+//                    //if clicked again, then hide all them.
+//                    visited_color[i] = 0;
+//                    click_count -= 1;
+//                    var c = d3.select(this).attr("class");
+//                    d3.selectAll("." + c).style("display", "none");
+//                    already_highlight.delete(d3.select(this).attr(index));
+//                })
+//                .on("mouseover", function(){
+//                    //each time mouseover, current_click should be -1, so the color is red
+//                    d = +d3.select(this).attr("index");
+//                    float_window["_groups"][0][0].textContent = document_name[d];
+//                    float_window["_groups"][0][0].style.visibility = "visible";                
+//                    })
+//                .on("mousemove", function(){
+//                    float_window["_groups"][0][0].style["top"] = (event.pageY-10)+"px";
+//                    float_window["_groups"][0][0].style["left"] = (event.pageX+10)+"px";
+//                    })
+//                .on("mouseout", function(){
+//                    float_window["_groups"][0][0]["style"].visibility = "hidden";
+//                    })
+//                ;
     }
 };
 
 //highlight all the values of the selected document in each svg
-function highlight(num){
+function my_highlight(num){
+    console.log("my_highlight" + num);
     var coordinate = [];
     var x_coorninate = [];
     for(var i in refer){
@@ -543,6 +544,33 @@ function highlight(num){
     .attr("dx",  20)
     .attr("position", "relative")
     .text(document_name[num]);
+    
+    d3.selectAll(".highlight" + current_click)
+                .style("pointer-events", "auto")
+                .attr("index", num)
+                .on("click", function(){
+                    //if clicked again, then hide all them.
+                    visited_color[i] = 0;
+                    click_count -= 1;
+                    var c = d3.select(this).attr("class");
+                    d3.selectAll("." + c).style("display", "none");
+                    already_highlight.delete(d3.select(this).attr(index));
+                })
+                .on("mouseover", function(){
+                    //each time mouseover, current_click should be -1, so the color is red
+                    d = +d3.select(this).attr("index");
+                    float_window["_groups"][0][0].textContent = document_name[d];
+                    float_window["_groups"][0][0].style.visibility = "visible";                
+                    })
+                .on("mousemove", function(){
+                    float_window["_groups"][0][0].style["top"] = (event.pageY-10)+"px";
+                    float_window["_groups"][0][0].style["left"] = (event.pageX+10)+"px";
+                    })
+                .on("mouseout", function(){
+                    float_window["_groups"][0][0]["style"].visibility = "hidden";
+                    })
+                ;
+    
 };
 
 //mouseout event, hide all the highlight

@@ -225,11 +225,18 @@ d3.box = function() {
                 .attr("index", cur_num)
                 .on("click", function(){
                     //if clicked again, then hide all them.
-                    visited_color[i] = 0;
+//                    visited_color[i] = 0;
+//                    click_count -= 1;
+//                    var c = d3.select(this).attr("class");
+//                    d3.selectAll("." + c).style("display", "none");
+//                    already_highlight.delete(d3.select(this).attr(i));
+                    var cur_index = this.getAttribute('class').substring(9);
+                    cur_index = + cur_index;
+                    visited_color[cur_index] = 0;
                     click_count -= 1;
                     var c = d3.select(this).attr("class");
                     d3.selectAll("." + c).style("display", "none");
-                    already_highlight.delete(d3.select(this).attr(index));
+                    already_highlight.delete(d3.select(this).attr(cur_index));
                 })
                     .on("mouseover", function(){
                     //each time mouseover, current_click should be -1, so the color is red

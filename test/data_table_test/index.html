@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Create a reusable table using d3 and jquery DataTables</title>
+<head>
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.9/css/jquery.dataTables.min.css">
+  <script src="//d3js.org/d3.v4.min.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script src="https://cdn.datatables.net/1.10.9/js/jquery.dataTables.min.js"></script>
+  <script src="gene_data.js"></script>
+  <script src="makeTable.js"></script>
+</head>
+<body>
+  <div id='container'></div>
+
+<script>
+var table_plot = makeTable()
+  .datum(gene_data)
+  .sortBy('pval', true)
+  .filterCols(['col', 'x', 'y']);
+
+d3.select('#container').call(table_plot);
+
+</script

@@ -1,5 +1,5 @@
 var myApp = angular.module('myApp', []);
-
+var label = [];
 myApp.controller('leftCtrl', ['$scope', function($scope) {
     $scope.criteria = ["DEFAULT","MIN", "MAX", "MEAN"];
     $scope.currentCri = $scope.criteria[0];
@@ -10,6 +10,7 @@ myApp.controller('leftCtrl', ['$scope', function($scope) {
     $scope.plots = $scope.normalPlot;
     $scope.currentFILE = currentFILE;
     $scope.files= files;
+    $scope.viewButton = "Go Compact View";
     $scope.resort = function(item){
         $scope.currentCri = item;
         if(item == "MEAN"){
@@ -24,6 +25,8 @@ myApp.controller('leftCtrl', ['$scope', function($scope) {
         else{
             refer = origin_refer;
         }
+        if($scope.reverse_order)
+            refer.reverse();
         redraw();
     };
     $scope.callReverse = function(){
@@ -53,18 +56,31 @@ myApp.controller('leftCtrl', ['$scope', function($scope) {
             $("#chart").css("display", "block");
             showSmall = 0;
             $scope.plots = $scope.normalPlot;
+            $scope.viewButton = "Go Compact View";
         }
         else{
             showSmall = 1;
             $("#chart").css("display", "none");      
             $("#small_chart").css("display", "block");        
             $scope.plots = $scope.smallPlot;
+            $scope.viewButton = "Go Expanded View";
         }
         $scope.currentPlot = "box";
         currentPlot = "box";
         redraw();
     };
-    
+    var data_for_dt = function(){
+        var tmp;
+        gene_data = [];
+        for(var j = 0; j < refer[0].length; j++){
+            tmp = {};
+            tmp["text_key"] = document_name[j];
+            for(var i = 0; i < label.length; i++){
+                tmp[label[i]] = refer[i][j];
+            }
+            gene_data.push(tmp);
+        }
+    }
     $scope.showPlot = function(p){
         currentPlot = p;
         $scope.currentPlot = p;
@@ -125,6 +141,12 @@ myApp.controller('leftCtrl', ['$scope', function($scope) {
     $scope.getdata = function (file){
         currentFILE = file;
         $scope.currentFILE = file;
+        refer = []
+        for(i = 0; i < color_pool.length; i++)
+            visited_color[i] = 0;
+
+        for(i = 0; i < 500; i++)
+            visited_color_coding[i] = 0;
         d3.csv(pre_path + file, function(error, csv) {
           if (error) throw error;
 
@@ -151,7 +173,7 @@ myApp.controller('leftCtrl', ['$scope', function($scope) {
               document_name.push(csv[x].text_key);
               name2index[csv[x].text_key] = x;
           }
-          var label = [];
+          label = [];
           for(var ele in csv[0]){
               if(!isNaN(csv[0][ele])){ 
                   label.push(ele);// key 
@@ -179,16 +201,22 @@ myApp.controller('leftCtrl', ['$scope', function($scope) {
           }
 
           origin_refer = refer.slice();
-            draw();
-            draw_small();
-
+            
+          redraw();
+//          draw_small();
 
           float_window = d3.select("body").append("div");
-            float_window.style("position", "absolute")
+          float_window.style("position", "absolute")
                 .style("z-index", "10")
                 .attr("class", "tag")
                 .style("visibility","hidden")
                 .text("default");
+          data_for_dt();
+          var table_plot = makeTable()
+              .datum(gene_data)
+            ;
+
+            d3.select('#datatable').call(table_plot);
           }
     )};
 }]);
